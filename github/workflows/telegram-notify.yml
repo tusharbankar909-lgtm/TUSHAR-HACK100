@@ -1,0 +1,35 @@
+name: TUSHAR Website Notifications
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Notification message"
+        required: true
+        default: "TUSHAR website status update"
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram Notification
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          CUSTOM_MESSAGE: ${{ github.event.inputs.message }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "push" ]; then
+            MESSAGE="TUSHAR website repository updated."
+          else
+            MESSAGE="$CUSTOM_MESSAGE"
+          fi
+
+          curl --fail --silent --show-error \
+            --request POST \
+            "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${CHAT_ID}" \
+            --data-urlencode "text=${MESSAGE}"
